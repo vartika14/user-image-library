@@ -34,6 +34,7 @@ public class ImageController {
      */
     @PostMapping("/upload")
     public String uploadFileToImgur(@RequestParam("file")MultipartFile file){
+        LOGGER.info("Image Upload Request");
         try{
             String image = Base64.getEncoder().encodeToString(file.getBytes());
             return imageService.imageUpload(image);
@@ -49,7 +50,8 @@ public class ImageController {
      * @return
      */
     @DeleteMapping(path="/delete/{imageId}")
-        public String deleteImgFromImgur(@PathVariable("imageId") String imageId) throws ImgurAPIException, ImageNotFoundException {
+    public String deleteImgFromImgur(@PathVariable("imageId") String imageId) throws ImgurAPIException, ImageNotFoundException {
+        LOGGER.info("Image delete Request for image : {}", imageId);
         return imageService.deleteImage(imageId);
     }
 

@@ -26,6 +26,8 @@ public class ImageServiceImpl implements ImageService {
 
     private static final String IMGUR_IMAGE_DELETE_URI=  "https://api.imgur.com/3/image/";
 
+    private static final String SUCCESS_STATUS = "Success";
+
     private final ImageRepository imageRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageServiceImpl.class);
@@ -48,7 +50,7 @@ public class ImageServiceImpl implements ImageService {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Client-ID " + IMGUR_CLIENT_ID);
         HttpEntity<String> entity = new HttpEntity<String>(headers);
-        //ImgurGetResponseWrapper<Image>  response = restTemplate.getForObject(IMGUR_BASE_URI+"imageId", Image.class);
+        LOGGER.info("GET Image details API call for image id : {}",imageId);
         ResponseEntity<ImageData> response = restTemplate.exchange(IMGUR_BASE_URI+imageId, HttpMethod.GET, entity, ImageData.class);
         return response.getBody().getData();
     }
@@ -64,9 +66,11 @@ public class ImageServiceImpl implements ImageService {
         headers.add("Authorization", "Client-ID " + IMGUR_CLIENT_ID);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<String> entity = new HttpEntity<String>(base64encodedImage, headers);
+        LOGGER.info("Image upload  API call for image ");
         ResponseEntity<ImageData> response = restTemplate.exchange(IMGUR_IMAGE_UPLOAD_URI,HttpMethod.POST,entity,ImageData.class);
         if(response.getBody().isSuccess()){
             ImageEntity imageDao = mapToImageDaoObject(response.getBody().getData());
+            LOGGER.info("Save image in the database {} {}",imageDao.getImageId(),imageDao.getImageLink());
             imageRepository.save(imageDao);
         }
         return response.getBody().getData().getLink();
@@ -102,13 +106,14 @@ public class ImageServiceImpl implements ImageService {
         HttpEntity<String> entity = new HttpEntity<String>(headers);
         Optional<ImageEntity> image = imageRepository.findById(imageId);
         if(image.isEmpty()){
-            throw new ImageNotFoundException();
+            throw new ImageNotFoundException("Image does not exists in DB");
         }
+        LOGGER.info("IMGUR API call to delete image from their gallery");
         ResponseEntity<ImgurDeleteResponse> response = restTemplate.exchange(IMGUR_IMAGE_DELETE_URI+image.get().getDeleteHash(),HttpMethod.DELETE,entity,ImgurDeleteResponse.class);
         if(response.getBody().isData()) {
-            return "success";
+            return SUCCESS_STATUS;
         } else {
-           throw new ImgurAPIException();
+           throw new ImgurAPIException("Imgur API reponsed with error status : "+ response.getBody().getStatus());
         }
 
     }

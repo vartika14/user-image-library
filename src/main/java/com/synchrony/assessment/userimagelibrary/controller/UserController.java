@@ -35,11 +35,13 @@ public class UserController {
      */
     @PostMapping("/login")
     public UserDetails isUserAuthenticated(User user){
+        LOGGER.info("Check user authentication with user values : {}",user);
         return userDetailsService.loadUserByUsername(user.getUserName());
     }
 
     @PostMapping("/crete")
     public String createUser(User user) throws InvalidUserException {
+        LOGGER.info("Create User Request with user values : {}",user);
         return userDetailsService.createUser(user);
     }
 

@@ -32,6 +32,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUserName(username);
+        LOGGER.info("Find if user exists int the database : {}", username );
         if (user == null) {
             throw new UsernameNotFoundException("User not found with username: " + username);
         }
@@ -44,7 +45,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     public String createUser(User user) throws InvalidUserException {
        if (null == user.getUserName()) {
-           throw new InvalidUserException();
+           throw new InvalidUserException("User name must not be empty");
        }
        else{
            UserEntity userEntity = new UserEntity();
@@ -53,7 +54,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                userRepository.save(userEntity);
                return SUCCESS_STATUS;
            }catch (Exception e) {
-               throw new InvalidUserException();
+               throw new InvalidUserException("Error occurred while saving the user in database");
            }
 
        }
